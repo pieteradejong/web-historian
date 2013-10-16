@@ -10,45 +10,31 @@ module.exports.handleRequest = function (request, response) {
   headers['Content-Type'] = "text/plain";
   var responseBody = "Not Found";
 
-  // REPLACING THIS WITH QUERYSTRING MODULE
-  // var parseQueryString = function(url){
-  //   var options = {};
-  //   var queryString = url.slice(url.indexOf('?')+1);
-  //   if (queryString === url) { return options; }
-  //   var pairs = queryString.split('&');
-  //   for (var i=0; i<pairs.length; i++) {
-  //     var pair = pairs[i].split('=');
-  //     options[pair[0]] = pair[1];
-  //   }
-  //   return options;
-  // };
-
   var root = function(){
-    // statusCode = 200;
-    // if (pathname === '/') {
-    //   headers['Content-Type'] = "text/html";
-    //   responseBody = fs.readFileSync('../client/index.html');
-    // } else {
-    //   headers['Content-Type'] = (pathname === '/styles/styles.css') ? "text/css" : "text/javascript";
-    //   responseBody = fs.readFileSync('../client/' + pathname);
-    // }
     if (request.method === 'POST') {
-      sitePost();
+      postRouter();
     } else {
       statusCode = 200;
       responseBody = "<input />";
     }
   };
 
-  var sitePost = function() {
-    var blah = querystring.parse(url);
-    console.log(blah);
-    var blah = querystring.parse(url.slice(url.indexOf('?')+1));
-    console.log(blah);
+  var postRouter = function() {
+    var siteUrl = request._postData.url;
+    var pathname = '/' + siteUrl;
+    if (router[pathname]) {
+      getSite(pathname);
+    } else {
+      router[pathname] = getSite;
+      sitePost(siteUrl);
+    }
+  };
+
+  var sitePost = function(siteUrl) {
     statusCode = 302;
-    console.log(request.url);
-    var url = request.url.slice(1);
-    fs.appendFile(module.exports.datadir, url, function(err){
+    router[pathname] = getSite;
+    var text = siteUrl + "\n";
+    fs.appendFileSync(module.exports.datadir, text, 'utf8', function(err){
       if (err) throw err;
       console.log(url + " was appended to file");
     });
@@ -56,17 +42,9 @@ module.exports.handleRequest = function (request, response) {
 
   var getSite = function(pathname){
     file = path.join(__dirname, "../data/sites", pathname);
-    if (file) {
-      statusCode = 200;
-      responseBody = fs.readFileSync(file);
-    } else {
-      statusCode = 404;
-      responseBody = "Site not found.";
-    }
-    
+    statusCode = 200;
+    responseBody = fs.readFileSync(file);
   };
-
-  
 
   var router = {
     '/': root,
@@ -74,7 +52,7 @@ module.exports.handleRequest = function (request, response) {
   };
 
   var pathname = url.parse(request.url).pathname;
-  router[pathname](pathname);
+  if (router[pathname]) { router[pathname](pathname); }
   response.writeHead(statusCode, headers);
   response.end(responseBody);
 };
