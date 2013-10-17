@@ -1,13 +1,7 @@
-// eventually, you'll have some code here that uses the tested helpers 
+// eventually, you'll have some code here that uses the tested helpers
 // to actually download the urls you want to download.
-
 var helpers = require('./lib/html-fetcher-helpers');
-
-helpers.readUrls('../../data/sites.txt', function(urls){
-  sites = helpers.downloadUrls(urls);
-  for (var site in sites) {
-    fs.writeFile('../../data/sites/' + site, sites[site], function (err) {
-      if (err) throw err;
-    });
-  }
-});
+var path = require('path');
+console.log("directory ",__dirname);
+console.log("path.join ",path.join(__dirname, "../data/sites.txt"));
+helpers.readUrls(path.join(__dirname, "../data/sites.txt"), helpers.downloadUrls);
